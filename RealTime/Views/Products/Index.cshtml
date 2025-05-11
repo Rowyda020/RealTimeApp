@@ -1,0 +1,80 @@
+﻿@model IEnumerable<RealTime.Models.Product>
+
+@{
+    ViewData["Title"] = "Our Products";
+}
+
+<div class="container py-5">
+    <h1 class="text-center mb-5 display-4 fw-bold text-primary">Our Products</h1>
+
+    <div class="row g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 product-card shadow-sm border-0 rounded-4 overflow-hidden">
+                    <div class="product-image-container">
+                        <img src="@item.ImagePath" class="card-img-top" alt="@item.Name" />
+                        <div class="product-overlay">
+                            <a href="@Url.Action("Details", "Products", new { id = item.Id })" class="btn btn-light btn-lg rounded-pill px-4">View Details</a>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-3">@Html.DisplayFor(modelItem => item.Name)</h5>
+                        <p class="card-text text-muted mb-4">@Html.DisplayFor(modelItem => item.Description)</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h4 text-primary fw-bold">$@Html.DisplayFor(modelItem => item.Price)</span>
+                          
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+    }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+    .product-image-container {
+        position: relative;
+        height: 250px;
+        overflow: hidden;
+    }
+
+        .product-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+    .product-card:hover .product-image-container img {
+        transform: scale(1.05);
+    }
+
+    .product-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .product-card:hover .product-overlay {
+        opacity: 1;
+    }
+</style>

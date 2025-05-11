@@ -1,0 +1,101 @@
+﻿@model RealTime.Models.Product
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <img src="@Model.ImagePath" class="card-img-top" alt="@Model.Name" style="width: 100%; height: 200px;" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h3>@Model.Name</h3>
+            <p>@Html.DisplayFor(model => model.Description)</p>
+            <p><strong>Price:</strong> $@Html.DisplayFor(model => model.Price)</p>
+            <button class="btn btn-primary">Add to Cart</button>
+            <p><strong>Category:</strong> Electronics</p>
+            <p><strong>Availability:</strong> In Stock</p>
+        </div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Customer Reviews</h4>
+                    <div id="comments">
+                        @foreach (var comment in Model.Comments)
+                        {
+                            <div class="card">
+                                <div class="card-body">
+                                    <p><strong>@(comment.UserName ?? "Anonymous")</strong> - @comment.CreatedAt.ToString("MMMM dd, yyyy")</p>
+                                    <p>@comment.Content</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <h5>Add Your Review</h5>
+                    <form id="commentForm">
+                        <input type="hidden" id="productId" value="@Model.Id" />
+                        <div class="mb-1">
+                            <input type="text" id="username" name="username" placeholder="Your Name" class="form-control" required />
+                        </div>
+                        <div class="mb-1">
+                            <textarea id="content" name="content" rows="2" class="form-control" placeholder="Write your review..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.10/signalr.min.js"></script>
+<script>
+    $(document).ready(function() {
+        var currentProductId = $("#productId").val();
+        var hub = new signalR.HubConnectionBuilder()
+            .withUrl("/commentHub")
+            .build();
+
+        hub.start()
+            .then(function() {
+                return hub.invoke("ProductGroup", parseInt(currentProductId));
+            })
+            .catch(function(err) {
+                console.error(err.toString());
+            });
+
+        hub.on("NewCommentNotify", function (productId, name, comment, createdAt) {
+            if (parseInt(productId) === parseInt(currentProductId)) {
+                var commentDiv = $(`<div class="card">
+                    <div class="card-body">
+                        <p><strong>${name || 'Anonymous'}</strong> - ${new Date(createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                        <p>${comment}</p>
+                    </div>
+                </div>`);
+                $("#comments").prepend(commentDiv);
+            }
+        });
+
+        $("#commentForm").on("submit", function (e) {
+            e.preventDefault();
+            var userName = $("#username").val();
+            var userComment = $("#content").val();
+
+            if (userName && userComment) {
+                hub.invoke("SendComment", parseInt(currentProductId), userName, userComment)
+                    .catch(function(err) {
+                        console.error(err.toString());
+                    });
+                $("#username").val("");
+                $("#content").val("");
+            }
+        });
+    });
+</script>
